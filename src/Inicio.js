@@ -1,37 +1,55 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import BlogList from "./BlogList";
 
 const Inicio = () => {
+  const [blogs, SetBlogs] = useState(null);
+  const [cargando, SetCargando] = useState(true);
+  const [error, SetError] = useState(null);
 
-    const[blogs,SetBlogs] = useState([
-        { titulo: "Mi nueva web", body: "Texto para mostrar", autor:"Dios", id:1},
-        { titulo: "Pepe", body: "Pepe", autor:"Pepe", id:2},
-        { titulo: "Matias el Rumano", body: "Encarcelado", autor:"Saitam", id:3}
-    ])
+  useEffect(() => {
+    setTimeout(() => {
+      fetch("http://localhost:8000/blogs")
+        .then((res) => {
+            console.log(res);
+            if(!res.ok){
+                throw Error("No recovered information.");
+            }
+          return res.json();
+        })
+        .then((datos) => {
+          //console.log(datos);
+          SetBlogs(datos);
+          SetCargando(false);
+          SetError(null);
+        })
+        .catch(err=>{
+            /* console.log(err.message); */
+            SetError(err.message);
+            SetCargando(false);
+        })
 
-    const[nombre,setNombre] = useState('Pepito');
-    const[boolean,setBoolean] = useState(false);
-    const handleEliminarBlog = (id)=>{
-        const nuevoBlogs = blogs.filter(blog => blog.id !== id);
-        SetBlogs(nuevoBlogs);
-        setBoolean(true);
-    }
+    }, 1000);
+  }, []);
 
-    useEffect(()=>{
-        console.log("GUN");
-        console.log(blogs);
-
-    },[boolean])
-
-	return (
-		<div className="home">
-		    <BlogList blogs={blogs} titulo="Listado de blogs" handleEliminarBlog={handleEliminarBlog} />
-		    <BlogList blogs={blogs.filter(blog => blog.autor === "Dios")} titulo="Blogs de Dios" handleEliminarBlog={handleEliminarBlog}/>
-		    <BlogList blogs={blogs.filter(blog => blog.id === 2)} titulo="Blogs de Pepe" handleEliminarBlog={handleEliminarBlog}/>
-        <p>{nombre}</p>
-        <button onClick={()=>setNombre("Pepe")}>Cambio de nombre</button>
-        </div>
-	);
-}
+  return (
+    <div className="home">
+      {cargando && <div>Loading...</div>}
+      {error && <div>{error}</div>}
+      {blogs && <BlogList blogs={blogs} titulo="Listado de blogs" />}
+      {blogs && (
+        <BlogList
+          blogs={blogs.filter((blog) => blog.autor === "Dios")}
+          titulo="Blogs de Dios"
+        />
+      )}
+      {blogs && (
+        <BlogList
+          blogs={blogs.filter((blog) => blog.id === 2)}
+          titulo="Blogs de Pepe"
+        />
+      )}
+    </div>
+  );
+};
 
 export default Inicio;
